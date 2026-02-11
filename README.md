@@ -1,16 +1,39 @@
-# React + Vite
+# НТБ — Национальная Товарная Биржа
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Официальный сайт АО «Национальная товарная биржа» — организатора биржевого товарного рынка России, входящего в Группу «Московская Биржа».
 
-Currently, two official plugins are available:
+## Запуск
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+npm install
+npm run dev
+```
 
-## React Compiler
+## Структура проекта
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```
+src/
+├── main.jsx                    # Точка входа, BrowserRouter
+├── App.jsx                     # Routes — 6 маршрутов
+├── components/
+│   ├── Layout.jsx              # Header + Outlet + Footer
+│   ├── Header.jsx              # Sticky навигация, бургер-меню
+│   ├── Footer.jsx              # Подвал
+│   └── PageHeader.jsx          # Заголовок + хлебные крошки
+├── pages/
+│   ├── HomePage.jsx            # /
+│   ├── AboutPage.jsx           # /about
+│   ├── AuctionsPage.jsx        # /auctions
+│   ├── OtcPage.jsx             # /otc
+│   ├── NewsPage.jsx            # /news
+│   └── DisclosurePage.jsx      # /disclosure
+└── styles/
+    └── index.css               # Дизайн-система
+```
 
-## Expanding the ESLint configuration
+## Технологии
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- React + Vite
+- React Router DOM
+- Google Fonts (Inter)
+- Адаптивная вёрстка (mobile-first)
