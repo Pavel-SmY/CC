@@ -4,9 +4,16 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './styles/index.css'
 
+// Handle GitHub Pages SPA redirect from 404.html
+const params = new URLSearchParams(window.location.search)
+const redirectPath = params.get('p')
+if (redirectPath) {
+  window.history.replaceState(null, '', redirectPath)
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/CC">
       <App />
     </BrowserRouter>
   </StrictMode>
