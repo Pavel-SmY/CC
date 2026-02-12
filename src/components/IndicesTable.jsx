@@ -13,16 +13,7 @@ export default function IndicesTable() {
       try {
         const rows = await fetchAllIndices()
         if (cancelled) return
-
-        // Group by index id, take latest date for each
-        const latest = {}
-        rows.forEach(row => {
-          const id = row.indexid || row.INDEXID
-          if (!latest[id] || (row.tradedate || row.TRADEDATE) > (latest[id].tradedate || latest[id].TRADEDATE)) {
-            latest[id] = row
-          }
-        })
-        setIndices(Object.values(latest))
+        setIndices(rows)
       } catch {
         if (!cancelled) setError('Не удалось загрузить индексы')
       }
@@ -55,11 +46,11 @@ export default function IndicesTable() {
           </thead>
           <tbody>
             {indices.map(row => {
-              const id = row.indexid || row.INDEXID
-              const value = row.close || row.value || row.CLOSE || row.VALUE
-              const prev = row.open || row.OPEN || value
-              const change = prev ? ((value - prev) / prev * 100).toFixed(2) : '0.00'
-              const date = row.tradedate || row.TRADEDATE || ''
+              const id = row.SECID
+              const value = row.CLOSE
+              const prevClose = row._prev ? row._prev.CLOSE : value
+              const change = prevClose ? ((value - prevClose) / prevClose * 100).toFixed(2) : '0.00'
+              const date = row.TRADEDATE || ''
               const name = INDEX_NAMES[id] || id
 
               return (
@@ -74,7 +65,7 @@ export default function IndicesTable() {
                       {Number(change) >= 0 ? '+' : ''}{change}%
                     </span>
                   </td>
-                  <td className="indices-table__date">{date.slice(5)}</td>
+                  <td className="indices-table__date">{date}</td>
                 </tr>
               )
             })}

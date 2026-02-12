@@ -10,6 +10,7 @@ async function fetchJSON(url) {
  * Parse ISS table format { columns: [...], data: [[...], ...] } into array of objects
  */
 function parseISSTable(block) {
+  if (!block || !block.columns || !block.data) return []
   const { columns, data } = block
   return data.map(row => {
     const obj = {}
@@ -19,73 +20,49 @@ function parseISSTable(block) {
 }
 
 /**
- * Fetch commodity index analytics (WHFOB, SUGR, SOEXP, etc.)
- * Returns last N days of index values
+ * Fetch index history from MOEX ISS
+ * Correct endpoint: /history/engines/stock/markets/index/securities/{TICKER}.json
  */
-export async function fetchIndexAnalytics(indexId, days = 90) {
+export async function fetchIndexHistory(indexId, days = 90) {
   const from = new Date()
   from.setDate(from.getDate() - days)
   const fromStr = from.toISOString().slice(0, 10)
 
-  const url = `${ISS_BASE}/statistics/engines/commodity/markets/index/analytics/${indexId}.json?from=${fromStr}&limit=100&iss.meta=off`
-  const data = await fetchJSON(url)
+  // Paginate — ISS returns max 100 rows per request
+  let allRows = []
+  let start = 0
 
-  if (data.analytics) {
-    return parseISSTable(data.analytics)
+  while (true) {
+    const url = `${ISS_BASE}/history/engines/stock/markets/index/securities/${indexId}.json?from=${fromStr}&start=${start}&iss.meta=off&iss.only=history&history.columns=TRADEDATE,SECID,CLOSE,OPEN,HIGH,LOW,VALUE`
+    const data = await fetchJSON(url)
+    const rows = parseISSTable(data.history)
+    if (rows.length === 0) break
+    allRows = allRows.concat(rows)
+    if (rows.length < 100) break
+    start += 100
   }
-  if (data.indices) {
-    return parseISSTable(data.indices)
-  }
-  return []
+
+  return allRows
 }
 
 /**
- * Fetch all commodity indices current values
+ * Fetch current values for multiple indices
  */
 export async function fetchAllIndices() {
-  const url = `${ISS_BASE}/statistics/engines/commodity/markets/index/analytics.json?limit=50&iss.meta=off`
-  const data = await fetchJSON(url)
-
-  if (data.analytics) {
-    return parseISSTable(data.analytics)
-  }
-  return []
-}
-
-/**
- * Fetch wheat futures (WHEAT) from derivatives market
- */
-export async function fetchWheatFutures(days = 180) {
-  const from = new Date()
-  from.setDate(from.getDate() - days)
-  const fromStr = from.toISOString().slice(0, 10)
-
-  const url = `${ISS_BASE}/history/engines/futures/markets/forts/securities.json?security_collection=277&from=${fromStr}&limit=100&iss.meta=off`
-  const data = await fetchJSON(url)
-
-  if (data.history) {
-    return parseISSTable(data.history)
-  }
-  return []
-}
-
-/**
- * Fetch grain index history (NTB indices page style)
- * Tries multiple known grain-related index tickers
- */
-export async function fetchGrainIndices() {
-  const indices = ['WHFOB', 'BRLYFOB', 'CRNFOB', 'SUGR', 'SOEXP']
-  const results = {}
+  const tickers = Object.keys(INDEX_NAMES)
+  const results = []
 
   await Promise.all(
-    indices.map(async (id) => {
+    tickers.map(async (id) => {
       try {
-        const data = await fetchIndexAnalytics(id, 90)
-        if (data.length > 0) {
-          results[id] = data
+        const rows = await fetchIndexHistory(id, 30)
+        if (rows.length > 0) {
+          const last = rows[rows.length - 1]
+          const prev = rows.length > 1 ? rows[rows.length - 2] : last
+          results.push({ ...last, _prev: prev })
         }
       } catch {
-        // Index may not be available
+        // Index may not exist
       }
     })
   )
@@ -97,11 +74,14 @@ export async function fetchGrainIndices() {
  * Index display names
  */
 export const INDEX_NAMES = {
-  WHFOB: 'Пшеница FOB',
+  WHFOB: 'Пшеница FOB Чёрное море',
   BRLYFOB: 'Ячмень FOB',
   CRNFOB: 'Кукуруза FOB',
   SUGR: 'Сахар',
   SOEXP: 'Подсолнечное масло',
+  NWHEAT: 'Пшеница НТБ CPT',
+  MLTDRY: 'Сухое молоко',
+  BUTTER: 'Масло сливочное',
 }
 
 export const INDEX_COLORS = {
@@ -110,4 +90,7 @@ export const INDEX_COLORS = {
   CRNFOB: '#d97706',
   SUGR: '#dc2626',
   SOEXP: '#7c3aed',
+  NWHEAT: '#2563eb',
+  MLTDRY: '#059669',
+  BUTTER: '#ea580c',
 }

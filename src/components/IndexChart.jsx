@@ -10,7 +10,7 @@ import {
   Legend,
 } from 'chart.js'
 import { Line } from 'react-chartjs-2'
-import { fetchIndexAnalytics, INDEX_NAMES, INDEX_COLORS } from '../api/moex'
+import { fetchIndexHistory, INDEX_NAMES, INDEX_COLORS } from '../api/moex'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
 
@@ -28,7 +28,7 @@ export default function IndexChart({ indexId, days = 90 }) {
       setLoading(true)
       setError(null)
       try {
-        const rows = await fetchIndexAnalytics(indexId, days)
+        const rows = await fetchIndexHistory(indexId, days)
         if (cancelled) return
 
         if (rows.length === 0) {
@@ -38,12 +38,12 @@ export default function IndexChart({ indexId, days = 90 }) {
         }
 
         const labels = rows.map(r => {
-          const d = r.tradedate || r.date || r.TRADEDATE
+          const d = r.TRADEDATE || r.tradedate
           return d ? d.slice(5) : ''
         })
 
         const values = rows.map(r => {
-          return r.close || r.value || r.CLOSE || r.VALUE || r.price || 0
+          return r.CLOSE || r.close || 0
         })
 
         const last = values[values.length - 1]
