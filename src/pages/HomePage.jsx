@@ -108,7 +108,7 @@ export default function HomePage() {
           <h2 className="section-title">Рыночные данные</h2>
           <div className="charts-grid">
             <IndexChart indexId="WHFOB" days={90} />
-            <IndexChart indexId="SUGR" days={90} />
+            <IndexChart indexId="SOEXP" days={90} />
           </div>
           <div className="charts-grid charts-grid--full" style={{ marginTop: 24 }}>
             <IndicesTable />
